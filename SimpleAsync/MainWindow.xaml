@@ -5,12 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleAsync"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="528.5">
+        Title="MainWindow" Height="573" Width="528.5">
     <Grid>
         <Label Content="Simple Async App" VerticalAlignment="Top" Width="496" Height="40" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="10,0,14,0" />
-        <Button x:Name="executeSync" Content="Normal Execute" HorizontalAlignment="Left" Margin="10,45,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="executeSync_Click" FontSize="16"/>
-        <Button x:Name="executeAsync" Content="Async Execute" HorizontalAlignment="Left" Margin="10,108,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="executeAsync_Click" FontSize="16"/>
-        <TextBox x:Name="resultsWindow" HorizontalAlignment="Left" Height="237" Margin="10,172,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="496" FontSize="14"/>
+        <Button x:Name="executeSync" Content="Normal Execute" HorizontalAlignment="Left" Margin="10,90,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="executeSync_Click" FontSize="16"/>
+        <Button x:Name="executeAsync" Content="Async Execute" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="executeAsync_Click" FontSize="16"/>
+        <TextBox x:Name="resultsWindow" HorizontalAlignment="Left" Height="190" Margin="10,342,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="496" FontSize="14"/>
+        <Button x:Name="executeParallelAsync" Content="Async Parallerl Execute" HorizontalAlignment="Left" Margin="10,189,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="executeParallelAsync_Click" FontSize="16"/>
+        <Button x:Name="cancelOperation" Content="Cancel Download" HorizontalAlignment="Left" Margin="10,238,0,0" VerticalAlignment="Top" Width="496" Height="44" Click="cancelOperation_Click" FontSize="16"/>
+        <TextBox HorizontalAlignment="Left" Height="35" Margin="10,45,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="496" FontSize="18"/>
+        <ProgressBar x:Name="dashboardProgress" HorizontalAlignment="Left" Height="17" Margin="10,320,0,0" VerticalAlignment="Top" Width="496"/>
 
     </Grid>
 </Window>

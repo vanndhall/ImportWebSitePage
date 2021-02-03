@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using SimpleAsync;
+using SimpleAsync.Models;
 
 namespace Processor
 {
@@ -39,15 +40,20 @@ namespace Processor
             return output;
         }
         // działa tak szybko jak metoda Sync() - podobne czasy
-        public static async Task<List<WebsiteDataModel>> RunDownloadASync()
+        public static async Task<List<WebsiteDataModel>> RunDownloadASync(IProgress<ProgressReportModel> progress)
         {
             List<string> websites = PrepSampleData();
             List<WebsiteDataModel> output = new List<WebsiteDataModel>();
+            ProgressReportModel report = new ProgressReportModel();
 
             foreach (string site in websites)
             {
                 WebsiteDataModel results = await DownloadWebsiteAsync(site);
                 output.Add(results);
+
+                report.SitesDownloaded = output;
+                report.PercentageComplete = (output.Count * 100) / websites.Count;
+                progress.Report(report);
             }
             return output;
         }

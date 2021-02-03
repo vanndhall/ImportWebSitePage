@@ -14,7 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
-using SimpleAsync
+using Processor;
+using SimpleAsync.Models;
 
 namespace SimpleAsync
 {
@@ -31,27 +32,35 @@ namespace SimpleAsync
         private void executeSync_Click(object sender, RoutedEventArgs e)
         {
             var watch = Stopwatch.StartNew();
-            RunDownloadSync();
+            MainMethods.RunDownloadSync();
 
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            resultsWindow.Text += $"Total execution time: {elapsedMs}";
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
 
         }
        
         private async void executeAsync_Click(object sender, RoutedEventArgs e)
         {
+            Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
+            progress.ProgressChanged += ReportProgress; 
             var watch = Stopwatch.StartNew();
             //await RunDownloadASync();       // wolniejsze ale po kolei wysweitla wyniki
-            await RunDownloadParallelASync(); //szybsze ale wyswietla wszystkie wyniki na raz
+            await MainMethods.RunDownloadASync(progress); //szybsze ale wyswietla wszystkie wyniki na raz
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            resultsWindow.Text += $"Total execution time: {elapsedMs}";
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
         }
 
-        private void executeParallelAsync_Click(object sender, RoutedEventArgs e)
+        private void ReportProgress(object sender, ProgressReportModel e)
+        {
+            dashboardProgress.Value = e.PercentageComplete;
+            PrintResults(e.SitesDownloaded);
+        }
+
+        private async void executeParallelAsync_Click(object sender, RoutedEventArgs e)
         {
             var watch = Stopwatch.StartNew();
 
