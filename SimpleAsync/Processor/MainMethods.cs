@@ -40,6 +40,21 @@ namespace Processor
 
             return output;
         }
+
+        public static List<WebsiteDataModel> RunDownloadParallelSync()
+        {
+            List<string> websites = PrepSampleData();
+            List<WebsiteDataModel> output = new List<WebsiteDataModel>();
+
+            Parallel.ForEach<string>(websites, (site) =>
+            {
+                WebsiteDataModel results = DownloadWebsite(site);
+                output.Add(results);
+            }); 
+
+            return output;
+        }
+
         // działa tak szybko jak metoda Sync() - podobne czasy
         public static async Task<List<WebsiteDataModel>> RunDownloadASync(IProgress<ProgressReportModel> progress,CancellationToken cancellationToken)
         {
