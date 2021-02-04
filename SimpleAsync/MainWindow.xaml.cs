@@ -13,6 +13,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Diagnostics;
+using Processor;
+using SimpleAsync.Models;
+using System.Threading;
 
 namespace SimpleAsync
 {
@@ -21,6 +25,8 @@ namespace SimpleAsync
     /// </summary>
     public partial class MainWindow : Window
     {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        static AutoResetEvent _restart = new AutoResetEvent(false);
         public MainWindow()
         {
             InitializeComponent();
@@ -28,109 +34,82 @@ namespace SimpleAsync
 
         private void executeSync_Click(object sender, RoutedEventArgs e)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            RunDownloadSync();
+            resultsWindow.Text = "";
+            var watch = Stopwatch.StartNew();
+            MainMethods.RunDownloadSync();
 
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            resultsWindow.Text += $"Total execution time: {elapsedMs}";
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
 
         }
        
         private async void executeAsync_Click(object sender, RoutedEventArgs e)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            resultsWindow.Text = "";
+            Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
+            progress.ProgressChanged += ReportProgress; 
+            var watch = Stopwatch.StartNew();
             //await RunDownloadASync();       // wolniejsze ale po kolei wysweitla wyniki
-            await RunDownloadParallelASync(); //szybsze ale wyswietla wszystkie wyniki na raz
+            _restart.Set();
+            try
+            {
+
+                var results = await MainMethods.RunDownloadASync(progress, cts.Token); //szybsze ale wyswietla wszystkie wyniki na raz
+                PrintResults(results);
+            }
+            catch (OperationCanceledException)
+            {
+                resultsWindow.Text += $"\nThe async download was cancelled {Environment.NewLine}";
+               
+            }
+
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            resultsWindow.Text += $"Total execution time: {elapsedMs}";
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
         }
 
-        
-
-        private List<string> PrepData()
+        private void ReportProgress(object sender, ProgressReportModel e)
         {
-            List<string> output = new List<string>();
+            dashboardProgress.Value = e.PercentageComplete;
+            PrintResults(e.SitesDownloaded);
+        }
+
+        private async void executeParallelAsync_Click(object sender, RoutedEventArgs e)
+        {
             resultsWindow.Text = "";
+            var watch = Stopwatch.StartNew();
 
-            output.Add("https://www.yahoo.com");
-            output.Add("https://www.google.com");
-            output.Add("https://www.microsoft.com");
-            output.Add("https://www.wp.com");
-            output.Add("https://www.codeproject.com");
-            output.Add("https://www.stackoverflow.com");
-            output.Add("https://www.sadistic.pl");
+            var results = await MainMethods.RunDownloadParallelASync();
+            PrintResults(results);
 
-            return output;
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
+
         }
 
-        private void RunDownloadSync()
+        private void cancelOperation_Click(object sender, RoutedEventArgs e)
         {
-            List<string> websites = PrepData();
-
-            foreach (string site in websites)
-            {
-                WebsiteDataModel results = DownloadWebsite(site);
-                ReportWebsiteInfo(results);
-            }
-        }
-        // działa tak szybko jak metoda Sync() - podobne czasy
-        private async Task RunDownloadASync()
-        {
-            List<string> websites = PrepData();
-
-            foreach (string site in websites)
-            {
-                WebsiteDataModel results = await Task.Run(() =>DownloadWebsite(site));
-                ReportWebsiteInfo(results);
-            } 
+            cts.Cancel();
+            
         }
 
-        //bardziej zoptymalizowana metoda Async która jest 3 razy szybsza od Sync()
-        private async Task RunDownloadParallelASync()
+        private void PrintResults(List<WebsiteDataModel> results)
         {
-            List<string> websites = PrepData();
-            List<Task < WebsiteDataModel>> tasks = new List<Task<WebsiteDataModel>>();
-            foreach (string site in websites)
-            {
-               // tasks.Add(Task.Run(() => DownloadWebsite(site))); //wolniejsze metoda DownloadWebsite bez Async
-                tasks.Add(DownloadWebsiteAsync(site)); //szybsze metoda DownloadWebsite z Async - niepotrzebny Task.Run
-            }
-
-            var results = await Task.WhenAll(tasks);
-
+            resultsWindow.Text = "";
             foreach (var item in results)
             {
-                ReportWebsiteInfo(item); 
+                resultsWindow.Text += $"\n{item.WebsiteUrl} downloaded: {item.WebsiteData.Length} characters!";
             }
         }
 
-        private WebsiteDataModel DownloadWebsite(string websiteURL)
-        {
-            WebsiteDataModel output = new WebsiteDataModel();
-            WebClient client = new WebClient();
 
-            output.WebsiteUrl = websiteURL;
-            output.WebsiteData = client.DownloadString(websiteURL);
-            return output;
-        }
+       
 
-        private async Task<WebsiteDataModel> DownloadWebsiteAsync(string websiteURL)
-        {
-            WebsiteDataModel output = new WebsiteDataModel();
-            WebClient client = new WebClient();
-
-            output.WebsiteUrl = websiteURL;
-            output.WebsiteData = await client.DownloadStringTaskAsync(websiteURL);
-            return output;
-        }
-
-        private void ReportWebsiteInfo(WebsiteDataModel data)
-        {
-            resultsWindow.Text += $"{data.WebsiteUrl} downloaded: {data.WebsiteData.Length} characters log.{ Environment.NewLine}";
-        }
+        
     }
 }

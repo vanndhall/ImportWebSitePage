@@ -54,7 +54,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="WebsiteDataModel.cs" />
+    <Compile Include="Models\ProgressReportModel.cs" />
+    <Compile Include="Processor\MainMethods.cs" />
+    <Compile Include="Models\WebsiteDataModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
