@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using System.Diagnostics;
 using Processor;
 using SimpleAsync.Models;
+using System.Threading;
 
 namespace SimpleAsync
 {
@@ -24,6 +25,8 @@ namespace SimpleAsync
     /// </summary>
     public partial class MainWindow : Window
     {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        static AutoResetEvent _restart = new AutoResetEvent(false);
         public MainWindow()
         {
             InitializeComponent();
@@ -31,6 +34,7 @@ namespace SimpleAsync
 
         private void executeSync_Click(object sender, RoutedEventArgs e)
         {
+            resultsWindow.Text = "";
             var watch = Stopwatch.StartNew();
             MainMethods.RunDownloadSync();
 
@@ -43,11 +47,24 @@ namespace SimpleAsync
        
         private async void executeAsync_Click(object sender, RoutedEventArgs e)
         {
+            resultsWindow.Text = "";
             Progress<ProgressReportModel> progress = new Progress<ProgressReportModel>();
             progress.ProgressChanged += ReportProgress; 
             var watch = Stopwatch.StartNew();
             //await RunDownloadASync();       // wolniejsze ale po kolei wysweitla wyniki
-            await MainMethods.RunDownloadASync(progress); //szybsze ale wyswietla wszystkie wyniki na raz
+            _restart.Set();
+            try
+            {
+
+                var results = await MainMethods.RunDownloadASync(progress, cts.Token); //szybsze ale wyswietla wszystkie wyniki na raz
+                PrintResults(results);
+            }
+            catch (OperationCanceledException)
+            {
+                resultsWindow.Text += $"\nThe async download was cancelled {Environment.NewLine}";
+               
+            }
+
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
@@ -62,6 +79,7 @@ namespace SimpleAsync
 
         private async void executeParallelAsync_Click(object sender, RoutedEventArgs e)
         {
+            resultsWindow.Text = "";
             var watch = Stopwatch.StartNew();
 
             var results = await MainMethods.RunDownloadParallelASync();
@@ -70,13 +88,14 @@ namespace SimpleAsync
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            resultsWindow.Text += $"Total execution time: {elapsedMs}";
+            resultsWindow.Text += $"\nTotal execution time: {elapsedMs}";
 
         }
 
         private void cancelOperation_Click(object sender, RoutedEventArgs e)
         {
-
+            cts.Cancel();
+            
         }
 
         private void PrintResults(List<WebsiteDataModel> results)
@@ -84,7 +103,7 @@ namespace SimpleAsync
             resultsWindow.Text = "";
             foreach (var item in results)
             {
-                resultsWindow.Text += $"{item.WebsiteUrl} downloaded: {item.WebsiteData.Length} characters!";
+                resultsWindow.Text += $"\n{item.WebsiteUrl} downloaded: {item.WebsiteData.Length} characters!";
             }
         }
 

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SimpleAsync;
 using SimpleAsync.Models;
+using System.Threading;
 
 namespace Processor
 {
@@ -40,7 +41,7 @@ namespace Processor
             return output;
         }
         // działa tak szybko jak metoda Sync() - podobne czasy
-        public static async Task<List<WebsiteDataModel>> RunDownloadASync(IProgress<ProgressReportModel> progress)
+        public static async Task<List<WebsiteDataModel>> RunDownloadASync(IProgress<ProgressReportModel> progress,CancellationToken cancellationToken)
         {
             List<string> websites = PrepSampleData();
             List<WebsiteDataModel> output = new List<WebsiteDataModel>();
@@ -50,7 +51,8 @@ namespace Processor
             {
                 WebsiteDataModel results = await DownloadWebsiteAsync(site);
                 output.Add(results);
-
+                
+                cancellationToken.ThrowIfCancellationRequested(); // anulowanie zadania za pomocą cancelationToken i metody ThrowIfCancellationRequested przez klikniecie Cancel.
                 report.SitesDownloaded = output;
                 report.PercentageComplete = (output.Count * 100) / websites.Count;
                 progress.Report(report);
