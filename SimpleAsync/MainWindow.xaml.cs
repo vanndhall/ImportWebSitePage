@@ -34,10 +34,10 @@ namespace SimpleAsync
 
         private void executeSync_Click(object sender, RoutedEventArgs e)
         {
-            resultsWindow.Text = "";
+           // resultsWindow.Text = "";
             var watch = Stopwatch.StartNew();
-            MainMethods.RunDownloadSync();
-
+            var results = MainMethods.RunDownloadParallelSync();
+            PrintResults(results);
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
